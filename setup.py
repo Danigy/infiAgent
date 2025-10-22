@@ -37,8 +37,8 @@ else:
 setup(
     name="mla-agent",
     version="3.0.0",
-    author="Your Name",
-    author_email="your.email@example.com",
+    author="Chenglin Yu",
+    author_email="yuchenglin96@qq.com",
     description="Multi-Level Agent System for complex task automation",
     long_description=long_description,
     long_description_content_type="text/markdown",
