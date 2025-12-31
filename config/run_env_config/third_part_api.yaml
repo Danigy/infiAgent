@@ -1,17 +1,17 @@
 temperature: 0
 max_tokens: 0
 max_context_window: 200000
-base_url: your provider'url for example: https://XXXX.top/v1 / 你供应商提供的 url
+base_url: your provider's URL, for example: https://XXXX.top/v1 / the URL provided by your supplier
 api_key: yourkey
 models:
-# 如果供应商提供的是 openai 格式前缀填写openai,如果是anthropic格式前缀填写anthropic
-# 注意前缀名称和站点模型无关，前缀后再填写运营商提供的模型名称，例如 openrouter 提供
-# 了openai格式的gpt-4o,模型名为 openai/gpt-4o，则应该填写 openai/openai/gpt-4o
-# 如果模型厂商提供的是 gpt-4o，则直接填写 openai/gpt-4o即可
+# If the provider uses the OpenAI format, prefix with 'openai'; if it's the Anthropic format, prefix with 'anthropic'
+# Note: The prefix is independent of the site model. After the prefix, fill in the model name provided by the operator. For example, OpenRouter provides
+# gpt-4o in OpenAI format, and the model name is openai/gpt-4o, so it should be filled as openai/openai/gpt-4o
+# If the model provider offers gpt-4o, simply fill in openai/gpt-4o
 - openai/claude-haiku-4-5-20251001
 figure_models:
-#同理，除了openrouter不用填写以外，其他第三方需要填写请求格式前缀，方便路由对应格式
-- openai/dall-e-3 
+# Similarly, except for OpenRouter, other third parties need to fill in the request format prefix for proper routing.
+- openai/dall-e-3
 compressor_models:
 - openai/claude-haiku-4-5-20251001
 read_figure_models:
