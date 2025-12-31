@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-JSONL 事件输出工具 - 用于 VS Code 插件集成
+JSONL Event Output Tool - For VS Code Plugin Integration
 """
 
 import sys
@@ -11,23 +11,23 @@ from typing import Dict, Any, Optional, List
 
 
 class EventEmitter:
-    """JSONL 事件发射器"""
+    """JSONL Event Emitter"""
     
     def __init__(self, enabled: bool = False):
         """
         Args:
-            enabled: 是否启用 JSONL 输出模式
+            enabled: Whether to enable JSONL output mode
         """
         self.enabled = enabled
         self.call_id = None
         self.start_time = None
     
     def emit(self, event: Dict[str, Any]):
-        """发射一个事件（JSONL格式）"""
+        """Emit an event (JSONL format)"""
         if not self.enabled:
             return
         
-        # 直接写到原始 stdout（不受重定向影响）
+        # Write directly to the original stdout (unaffected by redirection)
         if hasattr(sys, 'stdout_orig'):
             sys.stdout_orig.write(json.dumps(event, ensure_ascii=False) + "\n")
             sys.stdout_orig.flush()
@@ -36,7 +36,7 @@ class EventEmitter:
             sys.stdout.flush()
     
     def start(self, call_id: str, project: str, agent: str, task: str):
-        """任务开始"""
+        """Task start"""
         self.call_id = call_id
         self.start_time = time.time()
         self.emit({
@@ -48,7 +48,7 @@ class EventEmitter:
         })
     
     def token(self, text: str):
-        """流式文本输出"""
+        """Streaming text output"""
         if not self.call_id:
             return
         self.emit({
@@ -58,7 +58,7 @@ class EventEmitter:
         })
     
     def progress(self, phase: str, pct: int):
-        """进度更新"""
+        """Progress update"""
         if not self.call_id:
             return
         self.emit({
@@ -69,7 +69,7 @@ class EventEmitter:
         })
     
     def notice(self, text: str):
-        """通知"""
+        """Notification"""
         if not self.call_id:
             return
         self.emit({
@@ -79,7 +79,7 @@ class EventEmitter:
         })
     
     def warn(self, text: str):
-        """警告"""
+        """Warning"""
         if not self.call_id:
             return
         self.emit({
@@ -89,7 +89,7 @@ class EventEmitter:
         })
     
     def error(self, text: str):
-        """错误"""
+        """Error"""
         if not self.call_id:
             return
         self.emit({
@@ -100,7 +100,7 @@ class EventEmitter:
     
     def artifact(self, kind: str, path: Optional[str] = None, 
                 summary: Optional[str] = None, preview: Optional[str] = None):
-        """产物"""
+        """Artifact"""
         if not self.call_id:
             return
         self.emit({
@@ -115,7 +115,7 @@ class EventEmitter:
     def human_in_loop(self, hil_id: str, title: str, message: str,
                      ui: Dict[str, Any], timeout_sec: int = 1800,
                      resume_hint: Optional[str] = None):
-        """人机交互"""
+        """Human-in-the-loop interaction"""
         if not self.call_id:
             return
         self.emit({
@@ -130,7 +130,7 @@ class EventEmitter:
         })
     
     def result(self, ok: bool, summary: str, artifacts: Optional[List[str]] = None):
-        """最终结果"""
+        """Final result"""
         if not self.call_id:
             return
         self.emit({
@@ -142,7 +142,7 @@ class EventEmitter:
         })
     
     def tool_call(self, tool_name: str, parameters: Dict[str, Any]):
-        """工具调用事件"""
+        """Tool call event"""
         if not self.call_id:
             return
         self.emit({
@@ -153,7 +153,7 @@ class EventEmitter:
         })
     
     def agent_call(self, agent_name: str, parameters: Dict[str, Any]):
-        """子 Agent 调用事件"""
+        """Sub-agent call event"""
         if not self.call_id:
             return
         self.emit({
@@ -164,7 +164,7 @@ class EventEmitter:
         })
     
     def end(self, status: str, extra: Optional[Dict] = None):
-        """任务结束"""
+        """Task end"""
         if not self.call_id:
             return
         
@@ -183,18 +183,17 @@ class EventEmitter:
         self.emit(event)
 
 
-# 全局实例
+# Global instance
 _event_emitter = EventEmitter(enabled=False)
 
 
 def init_event_emitter(enabled: bool = False):
-    """初始化全局事件发射器"""
+    """Initialize global event emitter"""
     global _event_emitter
     _event_emitter = EventEmitter(enabled=enabled)
     return _event_emitter
 
 
 def get_event_emitter() -> EventEmitter:
-    """获取全局事件发射器"""
+    """Get global event emitter"""
     return _event_emitter
-
