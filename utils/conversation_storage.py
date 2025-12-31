@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-对话历史存储 - 简化版
-只保存action_history，不保存传统的user/assistant对话
+Conversation History Storage - Simplified Version
+Only saves action_history, does not save traditional user/assistant dialogues
 """
 
 import json
@@ -13,21 +13,21 @@ from datetime import datetime
 
 
 class ConversationStorage:
-    """对话历史存储器"""
+    """Conversation history storage"""
     
     def __init__(self, task_id: str = None):
-        """初始化存储器 - 使用用户主目录（跨平台）"""
+        """Initialize storage - uses user home directory (cross-platform)"""
         self.conversations_dir = Path.home() / "mla_v3" / "conversations"
         self.conversations_dir.mkdir(parents=True, exist_ok=True)
         self.task_id = task_id
     
     def _generate_filename(self, task_id: str, agent_id: str) -> str:
-        """生成对话文件名：hash + 最后文件夹名 + agent_id"""
+        """Generate conversation filename: hash + last folder name + agent_id"""
         from pathlib import Path
         import hashlib
         
         task_hash = hashlib.md5(task_id.encode()).hexdigest()[:8]
-        # 跨平台路径处理：检查是否是路径（包含/或\）
+        # Cross-platform path handling: check if it's a path (contains / or \)
         import os
         task_folder = Path(task_id).name if (os.sep in task_id or '/' in task_id or '\\' in task_id) else task_id
         task_name = f"{task_hash}_{task_folder}"
@@ -41,19 +41,19 @@ class ConversationStorage:
                     action_history_fact: List[Dict] = None,
                     pending_tools: List[Dict] = None):
         """
-        保存动作历史和完整状态
+        Save action history and complete state
         
         Args:
-            task_id: 任务ID
+            task_id: Task ID
             agent_id: Agent ID
-            agent_name: Agent名称
-            task_input: 任务输入
-            action_history: 动作历史列表
-            current_turn: 当前轮次
-            latest_thinking: 最新的thinking内容
-            first_thinking_done: 是否已完成首次thinking
-            tool_call_counter: 工具调用计数
-            system_prompt: 完整的system_prompt（包含XML上下文）
+            agent_name: Agent name
+            task_input: Task input
+            action_history: Action history list
+            current_turn: Current turn number
+            latest_thinking: Latest thinking content
+            first_thinking_done: Whether first thinking is completed
+            tool_call_counter: Tool call counter
+            system_prompt: Complete system_prompt (including XML context)
         """
         try:
             filepath = self._generate_filename(task_id, agent_id)
@@ -64,9 +64,9 @@ class ConversationStorage:
                 "agent_name": agent_name,
                 "task_input": task_input,
                 "current_turn": current_turn,
-                "action_history": action_history,  # 用于渲染（会压缩）
-                "action_history_fact": action_history_fact if action_history_fact else action_history,  # 完整轨迹
-                "pending_tools": pending_tools if pending_tools else [],  # 待执行的工具
+                "action_history": action_history,  # For rendering (will be compressed)
+                "action_history_fact": action_history_fact if action_history_fact else action_history,  # Complete trajectory
+                "pending_tools": pending_tools if pending_tools else [],  # Pending tools
                 "latest_thinking": latest_thinking,
                 "first_thinking_done": first_thinking_done,
                 "tool_call_counter": tool_call_counter,
@@ -77,21 +77,21 @@ class ConversationStorage:
             with open(filepath, 'w', encoding='utf-8') as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
             
-            # print(f"💾 已保存状态: 第{current_turn}轮, {len(action_history)}个动作")
+            # print(f"💾 State saved: Turn {current_turn}, {len(action_history)} actions")
         
         except Exception as e:
-            print(f"⚠️ 保存对话历史失败: {e}")
+            print(f"⚠️ Failed to save conversation history: {e}")
     
     def load_actions(self, task_id: str, agent_id: str) -> Dict:
         """
-        加载动作历史
+        Load action history
         
         Args:
-            task_id: 任务ID
+            task_id: Task ID
             agent_id: Agent ID
             
         Returns:
-            动作历史数据，如果不存在则返回None
+            Action history data, or None if not exist
         """
         try:
             filepath = self._generate_filename(task_id, agent_id)
@@ -102,31 +102,30 @@ class ConversationStorage:
             with open(filepath, 'r', encoding='utf-8') as f:
                 data = json.load(f)
             
-            print(f"📂 已加载动作历史: 第{data.get('current_turn', 0)}轮, {len(data.get('action_history', []))}个动作")
+            print(f"📂 Action history loaded: Turn {data.get('current_turn', 0)}, {len(data.get('action_history', []))} actions")
             return data
         
         except Exception as e:
-            print(f"⚠️ 加载对话历史失败: {e}")
+            print(f"⚠️ Failed to load conversation history: {e}")
             return None
 
 
 if __name__ == "__main__":
-    # 测试存储器
+    # Test storage
     storage = ConversationStorage()
     
-    # 测试保存
+    # Test save
     storage.save_actions(
         task_id="test",
         agent_id="agent_123",
         agent_name="test_agent",
-        task_input="测试任务",
+        task_input="Test task",
         action_history=[
             {"tool_name": "file_read", "arguments": {}, "result": {}}
         ],
         current_turn=1
     )
     
-    # 测试加载
+    # Test load
     data = storage.load_actions("test", "agent_123")
-    print(f"✅ 加载的数据: {data}")
-
+    print(f"✅ Loaded data: {data}")
