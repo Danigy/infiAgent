@@ -1,18 +1,19 @@
+```python
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 MLA V3 - Multi-Level Agent System
-安装配置
+Installation Configuration
 """
 
 from setuptools import setup, find_packages
 from pathlib import Path
 
-# 读取 README
+# Read README
 readme_file = Path(__file__).parent / "README.md"
 long_description = readme_file.read_text(encoding='utf-8') if readme_file.exists() else ""
 
-# 读取依赖
+# Read dependencies
 requirements_file = Path(__file__).parent / "requirements.txt"
 if requirements_file.exists():
     requirements = [
@@ -24,13 +25,13 @@ else:
 
 setup(
     name="mla-agent",
-    version="3.0.0",
-    author="Chenglin Yu",
-    author_email="yuchenglin96@qq.com",
+    version="1.0.0",
+    author="Danigy",
+    author_email="dnlmdwrk@gmail.com",
     description="Multi-Level Agent System for complex task automation",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/ChenglinPoly/Multi-Level-Agent",
+    url="https://github.com/Danigy/infiAgent",
     packages=find_packages(exclude=['test*', 'task_*', 'conversations']),
     py_modules=['start'],
     include_package_data=True,
