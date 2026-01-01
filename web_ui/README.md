@@ -1,285 +1,284 @@
 # MLA-V3 Web UI
 
-这是一个简单的 Web 前端界面，用于与 MLA-V3 框架进行交互。
+A simple web front-end interface for interacting with the MLA-V3 framework.
+## Features
 
-## 功能特性
+- 🎨 Modern conversation interface
+- 🤖 Display currently executing Agent (with avatar)
+- 📂 Display Task ID and Workspace path
+- 📊 Real-time streaming output (JSONL event stream)
+- 🔔 Human-in-Loop (HIL) interaction support: Automatically detects and responds to Agent's human interaction tasks
+- 💬 Support for multi-line input and Enter to send
+- 💾 Conversation history automatically saved to task_id/conversations/ directory
+- 📁 Integrated file browser to view and manage task files
 
-- 🎨 现代化的对话界面
-- 🤖 显示当前执行的 Agent（带头像）
-- 📂 显示 Task ID 和 Workspace 路径
-- 📊 实时流式输出（JSONL 事件流）
-- 🔔 **Human-in-Loop (HIL) 交互支持**：自动检测并响应 Agent 的人类交互任务
-- 💬 支持多行输入和 Enter 发送
-- 💾 对话历史自动保存到 `task_id/conversations/` 目录
-- 📁 集成文件浏览器，可查看和管理任务文件
-
-## 安装依赖
+## Installation Dependencies
 
 ```bash
 pip install flask flask-cors
 ```
 
-或者添加到 `requirements.txt`：
+Or add to requirements.txt:
 
 ```
 flask
 flask-cors
 ```
 
-## 启动方式
+## Startup Methods
 
-### 方法 1：使用便捷脚本（推荐）
+### Method 1: Using Convenience Script (Recommended)）
 
-**注意**：启动脚本会自动启动工具服务器（tool_server_lite），无需手动启动。首次运行时会询问您设置工作空间路径（Workspace Root）。
+**Note**：The startup script will automatically launch the tool server (tool_server_lite), no manual startup required. On first run, you'll be prompted to set the workspace root path.
 
-1. 启动服务器（会自动启动 Web UI 和工具服务器）：
-   - 首次运行时会提示输入工作空间路径
-   - 直接回车将使用当前目录作为工作空间（与 CLI 模式相同）
-   - 或输入绝对路径指定自定义工作空间
+1. Start the server (will automatically start Web UI and tool server):
+   - First run will prompt for workspace path
+   - Press Enter to use current directory as workspace (same as CLI mode)
+   - Or enter absolute path to specify custom workspace
    ```bash
    cd web_ui/server
    ./start.sh
    ```
-   或者使用统一管理脚本：
+   Or use unified management script:
    ```bash
    cd web_ui/server
    ./server start
    ```
 
-2. 停止服务器（会同时停止 Web UI 和工具服务器）：
+2. Stop server (will stop both Web UI and tool server):
    ```bash
    cd web_ui/server
    ./stop.sh
    ```
-   或者：
+   Or:
    ```bash
    cd web_ui/server
    ./server stop
    ```
 
-3. 查看服务器状态：
+3. Check server status:
    ```bash
    cd web_ui/server
    ./server status
    ```
-   会显示 Web UI 和工具服务器的运行状态。
+   Will show running status of Web UI and tool server.
 
-4. 重启服务器：
+4. Restart server:
    ```bash
    cd web_ui/server
    ./server restart
    ```
 
-5. 打开浏览器访问：
+5. Open browser and visit:
    ```
    http://localhost:22228
    ```
    
-   **服务器地址**：
+   **Server addresses**：
    - Web UI: http://localhost:22228
-   - 工具服务器 API: http://localhost:24243
-   - 工具服务器文档: http://localhost:24243/docs
+   - Tool server API: http://localhost:24243
+   - Tool server documentation: http://localhost:24243/docs
 
-### 方法 2：直接运行 Python（传统方式）
+### Method 2：Direct Python Execution (Traditional Method)
 
-**注意**：如果使用此方法，需要手动启动工具服务器。
+**Note**： If using this method, need to manually start tool server.
 
-1. 启动工具服务器（在一个终端）：
+1. Start tool server (in one terminal):
    ```bash
    cd tool_server_lite
    python server.py
    ```
 
-2. 启动 Web UI 服务器（在另一个终端）：
+2. Start Web UI server (in another terminal):
    ```bash
    cd web_ui/server
    python server.py
    ```
 
-3. 打开浏览器访问：
+3. Open browser and visit:
    ```
    http://localhost:22228
    ```
 
-### 端口配置
+### Port Configuration
 
-- **Web UI 默认端口**: 22228（因为 macOS 的 AirPlay 可能占用 5000 端口）
-- **工具服务器默认端口**: 24243
-- 可以通过环境变量指定其他端口：
+- **Web UI default port**: 22228（because macOS AirPlay may occupy port 5000)
+- **Tool server default port**: 24243
+- Can specify other ports via environment variables:
   ```bash
   cd web_ui/server
   PORT=8080 TOOL_PORT=8002 ./start.sh
-  # 或
+  # or
   PORT=8080 TOOL_PORT=8002 ./server start
   ```
 
-## 使用说明
+## Usage Instructions
 
-### 1. 设置 Task ID
+### 1. Set Task ID
 
-在顶部的 "Task ID" 输入框中输入任务目录的绝对路径，例如：
+Enter the absolute path of the task directory in the top "Task ID" input box, for example:
 ```
 /mla_task
 ```
-或
+or
 ```
 /Users/username/Desktop/my_project
 ```
 
-### 2. Agent 配置
+### 2. Agent Configuration
 
-- 当前版本固定使用 `alpha_agent` 和 `Default` 系统
-- 无需手动选择，系统会自动使用正确的配置
+- Current version fixed to use alpha_agent and Default system
+- No manual selection required, system automatically uses correct configuration
 
-### 3. 输入任务
+### 3. Input Task
 
-在底部的输入框中输入任务描述，例如：
+Enter task description in the bottom input box, for example:
 ```
-帮我找一篇关于 ECM 的论文
+Help me find a paper about ECM
 ```
 
-然后点击 "发送" 按钮或按 Enter 键（Shift+Enter 换行）。
+Then click the "Send" button or press Enter (Shift+Enter for new line).
 
-### 4. 查看输出
+### 4. View Output
 
-Agent 的执行输出会实时显示在对话窗口中：
-- 每条消息显示 Agent 头像和名称
-- 不同类型的消息有不同的颜色：
-  - 🔧 工具调用（tool_call）：青色
-  - 🤖 子 Agent 调用（agent_call）：蓝色
-  - ✅ 成功消息：青色
-  - ❌ 错误消息：红色
-  - ⚠️ 警告消息：黄色
-  - 📊 结果消息：橙色
-  - 💭 思考消息：紫色
+Agent execution output will be displayed in real-time in the conversation window:
+- Each message displays Agent avatar and name
+- Different message types have different colors:
+  - 🔧 Tool call (tool_call): Cyan
+  - 🤖 Sub-agent call (agent_call): Blue
+  - ✅ Success message: Cyan
+  - ❌ Error message: Red
+  - ⚠️ Warning message: Yellow
+  - 📊 Result message: Orange
+  - 💭 Thinking message: Purple
 
-### 5. Human-in-Loop (HIL) 交互
+### 5. Human-in-Loop (HIL) Interaction
 
-当 Agent 需要人工输入时：
-- 输入框会自动显示红色闪烁效果
-- 输入框 placeholder 会显示 Agent 的指令
-- Send 按钮自动启用（即使输入框为空）
-- 在输入框中输入响应并点击 Send
-- Agent 会继续执行任务
+When Agent requires human input:
+- Input box will automatically show red flashing effect
+- Input box placeholder will display Agent instructions
+- Send button automatically enabled (even if input box is empty)
+- Enter response in input box and click Send
+- Agent will continue task execution
 
-**工作流程**：
-1. Agent 调用 `human_in_loop` 工具
-2. 前端自动检测到 HIL 任务
-3. 输入框显示红色闪烁提示
-4. 用户输入响应并发送
-5. Agent 继续执行
+**Workflow**：
+1. Agent calls human_in_loop tool
+2. Front-end automatically detects HIL task
+3. Input box shows red flashing prompt
+4. User enters response and sends
+5. Agent continues execution
 
-## 界面说明
+## Interface Description
 
-### 顶部控制栏
-- **Task ID**: 任务工作目录路径（支持任务选择下拉框）
-- **Agent**: 固定使用 `alpha_agent`
-- **System**: 固定使用 `Default` 系统
-- **文件浏览器**: 右侧可浏览和管理任务文件
+### Top Control Bar
+- **Task ID**: Task workspace directory path (supports task selection dropdown)
+- **Agent**: Fixed to `alpha_agent`
+- **System**: Fixed to `Default` system
+- **File Browser**: Right side can browse and manage task files
 
-### 对话窗口
-- 显示所有消息（用户输入和 Agent 输出）
-- 自动滚动到最新消息
-- 支持长文本和多行显示
+### Conversation Window
+- Displays all messages (user input and Agent output)
+- Automatically scrolls to latest message
+- Supports long text and multi-line display
 
-### 输入区域
-- 文本输入框（支持多行）
-  - 正常状态：蓝色边框
-  - HIL 等待状态：红色闪烁边框
-- 发送按钮
-  - 有内容时自动启用
-  - HIL 模式下始终启用
-- 状态栏（显示运行状态和 Workspace 路径）
+### Input Area
+- Text input box (supports multiple lines)
+  - Normal state: Blue border
+  - HIL waiting state: Red flashing border
+- Send button
+  - Automatically enabled when content present
+  - Always enabled in HIL mode
+- Status bar (displays running status and Workspace path)
 
-## 技术架构
+## Technical Architecture
 
-- **后端**: Flask + Server-Sent Events (SSE)
-- **前端**: 原生 HTML + CSS + JavaScript
-- **事件流**: 直接解析 JSONL 事件流（`--jsonl` 模式）
-- **流式传输**: 使用 SSE 实现实时输出
-- **HIL 支持**: 事件触发 + 智能轮询检测机制
-- **数据存储**: 对话历史存储在 `task_id/conversations/` 目录
+- **Backend**: Flask + Server-Sent Events (SSE)
+- **Frontend**: Native HTML + CSS + JavaScript
+- **Event Stream**: Directly parses JSONL event stream (`--jsonl` mode)
+- **Streaming Transmission**: Uses SSE for real-time output
+- **HIL Support**: Event triggering + intelligent polling detection mechanism
+- **Data Storage**: Conversation history stored in `task_id/conversations/` directory
 
-## 文件结构
+## File Structure
 
 ```
 web_ui/
-├── server/                    # 服务器相关文件
-│   ├── server.py              # Flask 后端服务器
-│   ├── start.sh               # 启动脚本（支持 workspace 配置）
-│   ├── stop.sh                # 停止脚本
-│   └── users.yaml             # 用户认证配置
-├── index.html                 # 前端页面
-├── login.html                 # 登录页面
-├── static/                    # 静态资源
-│   ├── style.css             # 样式文件
-│   └── app.js                # JavaScript 逻辑（包含 HIL 检测）
-├── requirements.txt           # Python 依赖
-└── README.md                 # 使用说明
+├── server/                    # Server-related files
+│   ├── server.py              # Flask backend server
+│   ├── start.sh               # Startup script (supports workspace configuration)
+│   ├── stop.sh                # Stop script
+│   └── users.yaml             # User authentication configuration
+├── index.html                 # Frontend page
+├── login.html                 # Login page
+├── static/                    # Static resources
+│   ├── style.css             # Style file
+│   └── app.js                # JavaScript logic (includes HIL detection)
+├── requirements.txt           # Python dependencies
+└── README.md                 # Usage instructions
 ```
 
-## 数据存储
+## Data Storage
 
-### 对话历史
+### Conversation History
 
-所有对话历史和相关数据存储在任务目录下：
+All conversation history and related data stored under task directory:
 
 ```
 {task_id}/
-├── conversations/             # 对话历史目录
-│   ├── _stack.json           # Agent 调用栈
-│   ├── _share_context.json   # 共享上下文
-│   └── {agent_id}_actions.json  # Agent 动作历史
-├── chat_history.json         # Web UI 聊天记录（前端显示）
-└── latest_output.json        # 最新输出（用于快速预览）
+├── conversations/             # Conversation history directory
+│   ├── _stack.json           # Agent call stack
+│   ├── _share_context.json   # Shared context
+│   └── {agent_id}_actions.json  # Agent action history
+├── chat_history.json         # Web UI chat records (frontend display)
+└── latest_output.json        # Latest output (for quick preview)
 ```
 
-**注意**：删除 `task_id` 目录会同时删除所有相关数据，包括对话历史。
+**Note**：Deleting `task_id` directory will delete all related data, including conversation history.
 
-## 故障排除
+## Troubleshooting
 
-### 1. 无法连接到服务器
-- 检查服务器是否正在运行
-- 检查端口 5000 是否被占用
-- 查看服务器终端的错误信息
+### 1. Cannot Connect to Server
+- Check if server is running
+- Check if port 5000 is occupied
+- Check server terminal error messages
 
-### 2. Agent 执行失败
-- 检查 Task ID 路径是否正确
-- 检查工具服务器是否正常运行
-- 查看浏览器控制台的错误信息
+### 2. Agent Execution Failure
+- Check if Task ID path is correct
+- Check if tool server is running normally
+- Check browser console error messages
 
-### 3. 输出不显示
-- 检查浏览器控制台是否有 JavaScript 错误
-- 检查 SSE 连接是否正常（Network 标签页）
-- 查看服务器日志
+### 3. Output Not Displayed
+- Check browser console for JavaScript errors
+- Check if SSE connection is normal (Network tab)
+- Check server logs
 
-### 4. HIL 任务无响应
-- 确认工具服务器正在运行（检查端口 8001/8002）
-- 检查浏览器控制台是否有错误信息
-- 刷新页面重试
+### 4. HIL Task No Response
+- Confirm tool server is running (check port 8001/8002)
+- Check browser console for error messages
+- Refresh page and retry
 
-### 5. 工作空间路径问题
-- 确保路径是绝对路径
-- 检查路径是否有写权限
-- 重新运行 `start.sh` 配置正确的 workspace
+### 5. Workspace Path Issues
+- Ensure path is absolute
+- Check if path has write permissions
+- Rerun `start.sh` to configure correct workspace
 
-## 开发说明
+## Development Instructions
 
-### 修改端口
+### Modify Port
 
-在 `server.py` 中修改：
+Modify in `server.py`:
 ```python
 port = int(os.environ.get('PORT', 5000))
 ```
 
-或通过环境变量：
+Or via environment variable:
 ```bash
 PORT=8080 python server.py
 ```
 
-### 添加新的 Agent 头像
+### Add New Agent Avatar
 
-在 `app.js` 中的 `agentAvatars` 对象中添加：
+Add to `agentAvatars` object in `app.js`:
 ```javascript
 const agentAvatars = {
     'your_agent': '🎯',
@@ -287,11 +286,10 @@ const agentAvatars = {
 };
 ```
 
-### 自定义样式
+### Customize Styles
 
-修改 `static/style.css` 文件来自定义界面样式。
+Modify `static/style.css` file to customize interface styles.
 
-## 许可证
+## License
 
-与主项目相同。
-
+Same as main project.
