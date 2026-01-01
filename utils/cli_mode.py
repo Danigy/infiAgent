@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-交互式 CLI 模式
+Interactive CLI Mode
 """
 
 import os
@@ -37,11 +37,11 @@ except ImportError:
 
 
 def t(key: str, lang: str = 'en') -> str:
-    """获取指定语言的文本（全局函数）"""
+    """Get text in specified language (global function)"""
     return TEXTS.get(lang, TEXTS['en']).get(key, key)
 
 
-# 多语言文本配置
+# Multilingual text configuration
 TEXTS = {
     'en': {
         # System messages
@@ -213,7 +213,7 @@ TEXTS = {
 
 
 class InteractiveCLI:
-    """交互式命令行界面"""
+    """Interactive command-line interface"""
     
     def __init__(self, task_id: str, agent_system: str = "Test_agent"):
         self.task_id = task_id
@@ -221,41 +221,41 @@ class InteractiveCLI:
         self.current_agent = "alpha_agent"
         self.current_process = None
         self.output_queue = queue.Queue()
-        self.output_lines = []  # 保存最近的输出
-        self.max_output_lines = 20  # 最多保留20行输出
-        self.hil_mode = False  # 是否处于 HIL 响应模式
-        self.current_hil_task = None  # 当前的 HIL 任务
-        self.pending_hil = None  # 待处理的 HIL 任务（后台线程检测到的）
-        self.hil_processing = False  # 是否正在处理 HIL 任务（避免重复检测）
-        self.hil_check_interval = 2  # HIL 检查间隔（秒）
-        self.stop_hil_checker = False  # 停止 HIL 检查线程的标志
+        self.output_lines = []  # Save recent output
+        self.max_output_lines = 20  # Keep at most 20 lines of output
+        self.hil_mode = False  # Whether in HIL response mode
+        self.current_hil_task = None  # Current HIL task
+        self.pending_hil = None  # Pending HIL task (detected by background thread)
+        self.hil_processing = False  # Whether currently processing HIL task (avoid duplicate detection)
+        self.hil_check_interval = 2  # HIL check interval (seconds)
+        self.stop_hil_checker = False  # Flag to stop HIL checker thread
         
-        # 工具确认相关
-        self.pending_tool_confirmation = None  # 待处理的工具确认（后台线程检测到的）
-        self.tool_confirmation_processing = False  # 是否正在处理工具确认
-        self.auto_mode = None  # 权限模式（None=未设置, True=自动, False=手动）
+        # Tool confirmation related
+        self.pending_tool_confirmation = None  # Pending tool confirmation (detected by background thread)
+        self.tool_confirmation_processing = False  # Whether currently processing tool confirmation
+        self.auto_mode = None  # Permission mode (None=not set, True=auto, False=manual)
         
-        # 语言设置
-        self.language = 'en'  # 默认英文
+        # Language setting
+        self.language = 'en'  # Default English
         
         # Rich console
         self.console = Console() if RICH_AVAILABLE else None
         
-        # 加载可用 agent 列表
+        # Load available agent list
         self.available_agents = self._load_available_agents()
         
-        # 获取工具服务器地址
+        # Get tool server address
         self._load_tool_server_url()
         
-        # 启动后台 HIL 检查线程
+        # Start background HIL checker thread
         self._start_hil_checker()
     
     def t(self, key: str) -> str:
-        """获取当前语言的文本"""
+        """Get text in current language"""
         return TEXTS.get(self.language, TEXTS['en']).get(key, key)
     
     def _load_available_agents(self):
-        """加载 Level 2/3 Agent 列表"""
+        """Load Level 2/3 Agent list"""
         try:
             from utils.config_loader import ConfigLoader
             config_loader = ConfigLoader(self.agent_system)
@@ -272,7 +272,7 @@ class InteractiveCLI:
             return ["alpha_agent"]
     
     def _load_tool_server_url(self):
-        """加载工具服务器地址"""
+        """Load tool server address"""
         try:
             import yaml
             config_path = Path(__file__).parent.parent / "config" / "run_env_config" / "tool_config.yaml"
@@ -283,7 +283,7 @@ class InteractiveCLI:
             self.server_url = 'http://127.0.0.1:8001'
     
     def _check_hil_task(self) -> dict:
-        """检查当前 workspace 是否有等待中的 HIL 任务"""
+        """Check if current workspace has pending HIL tasks"""
         try:
             import requests
             response = requests.get(
@@ -297,7 +297,7 @@ class InteractiveCLI:
             return {"found": False}
     
     def _respond_hil_task(self, hil_id: str, response: str) -> bool:
-        """响应 HIL 任务"""
+        """Respond to HIL task"""
         try:
             import requests
             resp = requests.post(
@@ -311,7 +311,7 @@ class InteractiveCLI:
             return False
     
     def _check_tool_confirmation(self) -> dict:
-        """检查当前 workspace 是否有等待中的工具确认请求"""
+        """Check if current workspace has pending tool confirmation requests"""
         try:
             import requests
             response = requests.get(
@@ -325,7 +325,7 @@ class InteractiveCLI:
             return {"found": False}
     
     def _respond_tool_confirmation(self, confirm_id: str, approved: bool) -> bool:
-        """响应工具确认请求"""
+        """Respond to tool confirmation request"""
         try:
             import requests
             resp = requests.post(
@@ -339,73 +339,73 @@ class InteractiveCLI:
             return False
     
     def _get_interrupted_task(self) -> dict:
-        """获取中断的任务（检查 stack）"""
+        """Get interrupted task (check stack)"""
         try:
-            # 计算 task_id 的 hash（与 hierarchy_manager 一致）
-            task_hash = hashlib.md5(self.task_id.encode()).hexdigest()[:8]  # 8位，不是12位
+            # Calculate task_id hash (consistent with hierarchy_manager)
+            task_hash = hashlib.md5(self.task_id.encode()).hexdigest()[:8]  # 8 digits, not 12
             
-            # 跨平台路径处理
+            # Cross-platform path handling
             task_folder = Path(self.task_id).name if (os.sep in self.task_id or '/' in self.task_id or '\\' in self.task_id) else self.task_id
             task_name = f"{task_hash}_{task_folder}"
             
-            # Stack 文件位置（与 hierarchy_manager 一致）
+            # Stack file location (consistent with hierarchy_manager)
             conversations_dir = Path.home() / "mla_v3" / "conversations"
             stack_file = conversations_dir / f"{task_name}_stack.json"
             
             if not stack_file.exists():
-                return {"found": False, "message": f"没有找到中断的任务（文件不存在: {stack_file})"}
+                return {"found": False, "message": f"No interrupted task found (file does not exist: {stack_file})"}
             
-            # 读取 stack
+            # Read stack
             with open(stack_file, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 stack = data.get("stack", [])
             
             if not stack:
-                return {"found": False, "message": "没有中断的任务（stack 为空）"}
+                return {"found": False, "message": "No interrupted task (stack empty)"}
             
-            # 获取栈底任务（最初的用户输入）
+            # Get bottom task (initial user input)
             bottom_task = stack[0]
             agent_name = bottom_task.get("agent_name")
             user_input = bottom_task.get("user_input")
             
             if not agent_name or not user_input:
-                return {"found": False, "message": "任务数据不完整"}
+                return {"found": False, "message": "Task data incomplete"}
             
             return {
                 "found": True,
                 "agent_name": agent_name,
                 "user_input": user_input,
-                "interrupted_at": bottom_task.get("start_time", "未知"),
+                "interrupted_at": bottom_task.get("start_time", "Unknown"),
                 "stack_depth": len(stack)
             }
         
         except Exception as e:
-            return {"found": False, "message": f"读取任务失败: {e}"}
+            return {"found": False, "message": f"Failed to read task: {e}"}
     
     def _start_hil_checker(self):
-        """启动后台 HIL/工具确认检查线程"""
+        """Start background HIL/tool confirmation checker thread"""
         def hil_checker_thread():
             while not self.stop_hil_checker:
                 try:
-                    # 检查 HIL 任务
+                    # Check HIL tasks
                     if not self.pending_hil and not self.hil_processing:
                         hil_task = self._check_hil_task()
                         if hil_task.get("found"):
-                            # 发现新的 HIL 任务
+                            # Found new HIL task
                             self.pending_hil = hil_task
-                            # 打印提示音（ASCII bell）和可见提示
-                            print("\n\n\a")  # \a 是响铃符号
+                            # Print alert sound (ASCII bell) and visible prompt
+                            print("\n\n\a")  # \a is bell symbol
                             print("\n" + "="*80)
                             print(f"🔔🔔🔔 {self.t('hil_detected')} 🔔🔔🔔")
                             print("="*80 + "\n")
                     
-                    # 检查工具确认请求（仅在手动模式下）
+                    # Check tool confirmation requests (only in manual mode)
                     if self.auto_mode == False and not self.pending_tool_confirmation and not self.tool_confirmation_processing:
                         tool_confirmation = self._check_tool_confirmation()
                         if tool_confirmation.get("found"):
-                            # 发现新的工具确认请求
+                            # Found new tool confirmation request
                             self.pending_tool_confirmation = tool_confirmation
-                            # 打印提示音和可见提示
+                            # Print alert sound and visible prompt
                             print("\n\n\a")
                             print("\n" + "="*80)
                             print(f"⚠️⚠️⚠️ {self.t('tool_confirm_detected')} ⚠️⚠️⚠️")
@@ -413,14 +413,14 @@ class InteractiveCLI:
                 except Exception:
                     pass
                 
-                # 等待一段时间再检查
+                # Wait before checking again
                 time.sleep(self.hil_check_interval)
         
         thread = threading.Thread(target=hil_checker_thread, daemon=True)
         thread.start()
     
     def _show_hil_prompt(self, hil_id: str, instruction: str):
-        """显示 HIL 提示界面"""
+        """Display HIL prompt interface"""
         print("\n" + "="*80)
         print(f"🔔 {self.t('hil_task')}")
         print("="*80)
@@ -432,7 +432,7 @@ class InteractiveCLI:
         print("="*80 + "\n")
     
     def _show_tool_confirmation_prompt(self, confirm_id: str, tool_name: str, arguments: dict):
-        """显示工具确认界面"""
+        """Display tool confirmation interface"""
         print("\n" + "="*80)
         print(f"⚠️  {self.t('tool_confirm_title')}")
         print("="*80)
@@ -440,7 +440,7 @@ class InteractiveCLI:
         print(f"📝 {self.t('confirm_id')}: {confirm_id}")
         print(f"📋 {self.t('parameters')}:")
         for key, value in arguments.items():
-            # 截断过长的参数值
+            # Truncate overly long parameter values
             value_str = str(value)
             if len(value_str) > 100:
                 value_str = value_str[:100] + "..."
@@ -452,7 +452,7 @@ class InteractiveCLI:
         print("="*80 + "\n")
     
     def get_banner_text(self):
-        """获取 banner 文本（用于顶部固定显示）"""
+        """Get banner text (for fixed top display)"""
         return (
             "="*80 + "\n" +
             f"🤖 {self.t('cli_title')}\n" +
@@ -470,11 +470,11 @@ class InteractiveCLI:
         )
     
     def show_banner(self):
-        """显示欢迎信息（初始时）"""
+        """Display welcome message (initially)"""
         if RICH_AVAILABLE:
             self.console.clear()
             
-            # 创建顶部 Panel
+            # Create top Panel
             header_table = Table.grid(padding=(0, 2))
             header_table.add_column(style="cyan")
             header_table.add_column()
@@ -489,7 +489,7 @@ class InteractiveCLI:
                 border_style="blue"
             ))
             
-            # 使用说明
+            # Usage instructions
             help_text = Text()
             help_text.append(f"💡 {self.t('usage')}:\n", style="bold yellow")
             help_text.append(f"  • {self.t('usage_1')}\n")
@@ -500,64 +500,64 @@ class InteractiveCLI:
             self.console.print(Panel(help_text, border_style="dim"))
             print()
         else:
-            # 回退到简单模式
+            # Fallback to simple mode
             os.system('clear' if os.name != 'nt' else 'cls')
             print(self.get_banner_text())
     
     def parse_input(self, user_input: str):
         """
-        解析用户输入
+        Parse user input
         
         Returns:
             (agent_name, task_description)
         """
         user_input = user_input.strip()
         
-        # 检查是否指定 agent
+        # Check if agent specified
         if user_input.startswith('@'):
             parts = user_input[1:].split(None, 1)
             if len(parts) == 2:
                 agent_name, task = parts
-                # 验证 agent 是否存在
+                # Verify agent exists
                 if agent_name in self.available_agents:
                     return agent_name, task
                 else:
-                    print(f"⚠️  Agent '{agent_name}' 不存在，使用默认 Agent")
+                    print(f"⚠️  Agent '{agent_name}' does not exist, using default Agent")
                     return self.current_agent, user_input
             elif len(parts) == 1:
-                # 只有 @agent_name，没有任务
+                # Only @agent_name, no task
                 agent_name = parts[0]
                 if agent_name in self.available_agents:
                     self.current_agent = agent_name
-                    print(f"✅ 已切换到: {agent_name}")
+                    print(f"✅ Switched to: {agent_name}")
                     return None, None
                 else:
-                    print(f"⚠️  Agent '{agent_name}' 不存在")
+                    print(f"⚠️  Agent '{agent_name}' does not exist")
                     return None, None
         
-        # 没有 @，使用默认 agent
+        # No @, use default agent
         return self.current_agent, user_input
     
     def stop_current_task(self):
-        """停止当前运行的任务"""
+        """Stop currently running task"""
         if self.current_process and self.current_process.poll() is None:
             try:
                 if sys.platform == 'win32':
-                    # Windows: 发送 Ctrl+Break 信号
+                    # Windows: Send Ctrl+Break signal
                     self.current_process.send_signal(signal.CTRL_BREAK_EVENT)
                     try:
                         self.current_process.wait(timeout=2)
                     except subprocess.TimeoutExpired:
-                        # 如果信号无效，强制终止
+                        # If signal ineffective, force terminate
                         self.current_process.terminate()
                         self.current_process.wait(timeout=1)
                 else:
-                    # Unix/Mac: 使用 terminate (发送 SIGTERM)
+                    # Unix/Mac: Use terminate (send SIGTERM)
                     self.current_process.terminate()
                     self.current_process.wait(timeout=3)
-                print("\n⚠️  已终止前一个任务\n")
+                print("\n⚠️  Previous task terminated\n")
             except Exception as e:
-                # 最后手段：强制 kill
+                # Last resort: force kill
                 try:
                     self.current_process.kill()
                     self.current_process.wait(timeout=1)
@@ -566,10 +566,10 @@ class InteractiveCLI:
     
     def run_task(self, agent_name: str, user_input: str):
         """
-        在后台运行任务（JSONL模式）
-        前台保持输入可用
+        Run task in background (JSONL mode)
+        Keep foreground input available
         """
-        # 终止当前任务（如果有）
+        # Terminate current task (if any)
         self.stop_current_task()
         
         print(f"\n{'='*80}")
@@ -578,24 +578,24 @@ class InteractiveCLI:
         print(f"💡 {self.t('hint_resume')}")
         print(f"{'='*80}\n")
         
-        # 使用当前 Python 解释器调用 start.py（避免 venv 路径问题）
+        # Use current Python interpreter to call start.py (avoid venv path issues)
         start_py = Path(__file__).parent.parent / "start.py"
         
-        # Windows 需要特殊的进程创建标志以支持信号处理
+        # Windows requires special process creation flags to support signal handling
         popen_kwargs = {
             'stdout': subprocess.PIPE,
             'stderr': subprocess.PIPE,
             'text': True,
             'encoding': 'utf-8',
             'errors': 'replace',
-            'bufsize': 0  # 无缓冲，实时输出
+            'bufsize': 0  # No buffering, real-time output
         }
         
         if sys.platform == 'win32':
-            # Windows: 创建新的进程组，允许发送 Ctrl+Break
+            # Windows: Create new process group, allow sending Ctrl+Break
             popen_kwargs['creationflags'] = subprocess.CREATE_NEW_PROCESS_GROUP
         
-        # 构建命令参数（使用 Python 解释器直接运行 start.py）
+        # Build command arguments (use Python interpreter to directly run start.py)
         cmd_args = [
             sys.executable,
             str(start_py),
@@ -603,20 +603,20 @@ class InteractiveCLI:
                 '--agent_name', agent_name,
                 '--user_input', user_input,
                 '--agent_system', self.agent_system,
-                '--jsonl'  # JSONL 模式，实时流式输出
+                '--jsonl'  # JSONL mode, real-time streaming output
         ]
         
-        # 添加权限模式参数
+        # Add permission mode parameter
         if self.auto_mode is not None:
             cmd_args.extend(['--auto-mode', 'true' if self.auto_mode else 'false'])
         
-        # 启动子进程（JSONL模式 - 实时流式输出）
+        # Start subprocess (JSONL mode - real-time streaming output)
         self.current_process = subprocess.Popen(
             cmd_args,
             **popen_kwargs
         )
         
-        # 后台线程读取输出（JSONL 模式，解析并显示）
+        # Background thread reads output (JSONL mode, parse and display)
         def read_output():
             try:
                 import json
@@ -628,13 +628,13 @@ class InteractiveCLI:
                         continue
                     
                     try:
-                        # 解析 JSONL 事件
+                        # Parse JSONL event
                         event = json.loads(line)
                         
-                        # 显示所有事件（不截断）
+                        # Display all events (without truncation)
                         if event['type'] == 'token':
                             text = event['text']
-                            # 完整显示所有文本
+                            # Display all text completely
                             display_line = f"  {text}"
                             
                             self.output_lines.append(display_line)
@@ -643,28 +643,28 @@ class InteractiveCLI:
                             print(display_line)
                         
                         elif event['type'] == 'result':
-                            # 显示完整结果
+                            # Display complete result
                             summary = event.get('summary', '')
                             
                             print(f"\n{'='*80}")
-                            print("📊 执行结果:")
+                            print("📊 Execution result:")
                             print(f"{'='*80}")
-                            print(summary)  # 完整显示
+                            print(summary)  # Complete display
                             print(f"{'='*80}\n")
                             
-                            # 简短摘要到输出历史
-                            self.output_lines.append(f"📊 结果: {summary[:100]}...")
+                            # Brief summary to output history
+                            self.output_lines.append(f"📊 Result: {summary[:100]}...")
                         
                         elif event['type'] == 'end':
                             status_icon = "✅" if event.get('status') == 'ok' else "❌"
                             duration_sec = event.get('duration_ms', 0) / 1000
-                            display_line = f"{status_icon} 任务完成 ({duration_sec:.1f}s)"
+                            display_line = f"{status_icon} Task completed ({duration_sec:.1f}s)"
                             self.output_lines.append(display_line)
                             print(display_line)
                             print()
                     
                     except json.JSONDecodeError:
-                        # 不是有效的 JSON，跳过
+                        # Not valid JSON, skip
                         pass
             except Exception:
                 pass
@@ -672,14 +672,14 @@ class InteractiveCLI:
         thread = threading.Thread(target=read_output, daemon=True)
         thread.start()
 
-        # 读取 stderr，防止管道阻塞（但不显示，因为 JSONL 模式下 print 被重定向到 stderr）
+        # Read stderr, prevent pipe blocking (but don't display, since JSONL mode redirects print to stderr)
         def read_stderr():
             try:
                 for err in self.current_process.stderr:
                     if not err:
                         continue
-                    # 静默消费 stderr，防止管道写满阻塞
-                    # 只在遇到真正的错误关键词时才显示
+                    # Silently consume stderr, prevent pipe from filling and blocking
+                    # Only display when encountering real error keywords
                     err = err.rstrip('\n')
                     if any(keyword in err for keyword in ['Error:', 'Exception:', 'Traceback', 'CRITICAL', 'FATAL']):
                         error_line = f"⚠️ {err[:200]}"
@@ -694,8 +694,8 @@ class InteractiveCLI:
         thread_err.start()
     
     def get_bottom_toolbar(self):
-        """获取底部工具栏文本"""
-        # 检查是否有 HIL 任务（不频繁检查，避免性能问题）
+        """Get bottom toolbar text"""
+        # Check for HIL tasks (don't check frequently to avoid performance issues)
         try:
             hil_task = self._check_hil_task()
             if hil_task.get("found"):
@@ -710,10 +710,10 @@ class InteractiveCLI:
         )
     
     def run(self):
-        """运行交互式 CLI"""
+        """Run interactive CLI"""
         self.show_banner()
         
-        # 询问用户选择权限模式
+        # Ask user to select permission mode
         print("\n" + "="*80)
         print(f"🔐 {self.t('select_mode')}")
         print("="*80)
@@ -732,9 +732,9 @@ class InteractiveCLI:
             else:
                 print(f"❌ {self.t('invalid_choice')} 1 {self.t('default')} 2\n")
         
-        # 使用 prompt_toolkit（如果可用）
+        # Use prompt_toolkit (if available)
         if PROMPT_TOOLKIT_AVAILABLE:
-            # 创建自动补全
+            # Create auto-completion
             agent_completions = ['@' + agent for agent in self.available_agents]
             completer = WordCompleter(
                 agent_completions + ['/quit', '/exit', '/help', '/agents', '/resume', '/zh', '/en'],
@@ -749,99 +749,99 @@ class InteractiveCLI:
         
         while True:
             try:
-                # 检查是否有待处理的 HIL 任务（由后台线程检测到的）
+                # Check for pending HIL tasks (detected by background thread)
                 if self.pending_hil:
                     hil_task = self.pending_hil
-                    self.pending_hil = None  # 清除标志
-                    self.hil_processing = True  # 标记正在处理，避免后台线程重复检测
+                    self.pending_hil = None  # Clear flag
+                    self.hil_processing = True  # Mark as processing to avoid duplicate detection by background thread
                     
-                    # 进入 HIL 响应模式
+                    # Enter HIL response mode
                     hil_id = hil_task["hil_id"]
                     instruction = hil_task["instruction"]
                     
-                    # 显示 HIL 任务信息
+                    # Display HIL task information
                     self._show_hil_prompt(hil_id, instruction)
                     
-                    # 等待用户响应
+                    # Wait for user response
                     if PROMPT_TOOLKIT_AVAILABLE:
                         with patch_stdout():
-                            user_response = session.prompt(f"[{self.current_agent}] HIL响应 > ").strip()
+                            user_response = session.prompt(f"[{self.current_agent}] HIL response > ").strip()
                     else:
-                        user_response = input(f"[{self.current_agent}] HIL响应 > ").strip()
+                        user_response = input(f"[{self.current_agent}] HIL response > ").strip()
                     
                     if not user_response:
                         print(f"⚠️  {self.t('response_empty')}")
-                        self.pending_hil = hil_task  # 恢复任务，下次继续处理
-                        self.hil_processing = False  # 清除处理标志
+                        self.pending_hil = hil_task  # Restore task, continue processing next time
+                        self.hil_processing = False  # Clear processing flag
                         continue
                     
                     if user_response == '/skip':
                         print(f"⏭️  {self.t('hil_skipped')}\n")
-                        self.hil_processing = False  # 清除处理标志
+                        self.hil_processing = False  # Clear processing flag
                         continue
                     
-                    # 提交响应
+                    # Submit response
                     if self._respond_hil_task(hil_id, user_response):
                         print(f"✅ {self.t('hil_responded')}")
                         print(f"   {self.t('content')}: {user_response[:100]}{'...' if len(user_response) > 100 else ''}\n")
                     else:
                         print(f"❌ {self.t('hil_response_failed')}\n")
                     
-                    self.hil_processing = False  # 清除处理标志，允许检测新的 HIL 任务
+                    self.hil_processing = False  # Clear processing flag, allow detection of new HIL tasks
                     continue
                 
-                # 检查是否有待处理的工具确认请求
+                # Check for pending tool confirmation requests
                 if self.pending_tool_confirmation:
                     tool_confirmation = self.pending_tool_confirmation
-                    self.pending_tool_confirmation = None  # 清除标志
-                    self.tool_confirmation_processing = True  # 标记正在处理
+                    self.pending_tool_confirmation = None  # Clear flag
+                    self.tool_confirmation_processing = True  # Mark as processing
                     
-                    # 获取确认信息
+                    # Get confirmation information
                     confirm_id = tool_confirmation["confirm_id"]
                     tool_name = tool_confirmation["tool_name"]
                     arguments = tool_confirmation["arguments"]
                     
-                    # 显示工具确认界面
+                    # Display tool confirmation interface
                     self._show_tool_confirmation_prompt(confirm_id, tool_name, arguments)
                     
-                    # 等待用户选择
+                    # Wait for user choice
                     if PROMPT_TOOLKIT_AVAILABLE:
                         with patch_stdout():
-                            user_choice = session.prompt(f"[{self.current_agent}] 确认 [yes/no] > ").strip().lower()
+                            user_choice = session.prompt(f"[{self.current_agent}] Confirm [yes/no] > ").strip().lower()
                     else:
-                        user_choice = input(f"[{self.current_agent}] 确认 [yes/no] > ").strip().lower()
+                        user_choice = input(f"[{self.current_agent}] Confirm [yes/no] > ").strip().lower()
                     
                     if not user_choice:
                         print(f"⚠️  {self.t('invalid_choice_yn')}")
-                        self.pending_tool_confirmation = tool_confirmation  # 恢复任务
+                        self.pending_tool_confirmation = tool_confirmation  # Restore task
                         self.tool_confirmation_processing = False
                         continue
                     
-                    # 处理用户选择
+                    # Process user choice
                     if user_choice in ['yes', 'y']:
-                        # 批准执行
+                        # Approve execution
                         if self._respond_tool_confirmation(confirm_id, True):
                             print(f"✅ {self.t('tool_approved')}: {tool_name}\n")
                         else:
                             print(f"❌ {self.t('hil_response_failed')}\n")
                     elif user_choice in ['no', 'n']:
-                        # 拒绝执行
+                        # Reject execution
                         if self._respond_tool_confirmation(confirm_id, False):
                             print(f"❌ {self.t('tool_rejected')}: {tool_name}\n")
                         else:
                             print(f"❌ {self.t('hil_response_failed')}\n")
                     else:
                         print(f"⚠️  {self.t('invalid_choice_yn')}")
-                        self.pending_tool_confirmation = tool_confirmation  # 恢复任务
+                        self.pending_tool_confirmation = tool_confirmation  # Restore task
                         self.tool_confirmation_processing = False
                         continue
                     
                     self.tool_confirmation_processing = False
                     continue
                 
-                # 正常模式：显示提示符
+                # Normal mode: display prompt
                 if PROMPT_TOOLKIT_AVAILABLE:
-                    # 使用 patch_stdout 确保任务输出不影响输入
+                    # Use patch_stdout to ensure task output doesn't affect input
                     with patch_stdout():
                         user_input = session.prompt(f"[{self.current_agent}] > ").strip()
                 else:
@@ -850,14 +850,14 @@ class InteractiveCLI:
                 if not user_input:
                     continue
                 
-                # 处理管理命令（优先处理，不受待处理任务影响）
+                # Handle management commands (prioritized, unaffected by pending tasks)
                 if user_input in ['/quit', '/exit', '/q']:
-                    # 停止 HIL 检查线程
+                    # Stop HIL checker thread
                     self.stop_hil_checker = True
                     
-                    # 终止运行中的任务
+                    # Terminate running task
                     if self.current_process and self.current_process.poll() is None:
-                        print("\n⏹️  正在停止运行中的任务...")
+                        print("\n⏹️  Stopping running task...")
                         try:
                             if sys.platform == 'win32':
                                 self.current_process.send_signal(signal.CTRL_BREAK_EVENT)
@@ -869,32 +869,32 @@ class InteractiveCLI:
                             else:
                                 self.current_process.terminate()
                                 self.current_process.wait(timeout=3)
-                            print("✅ 任务已停止")
+                            print("✅ Task stopped")
                         except (subprocess.TimeoutExpired, ProcessLookupError):
                             try:
                                 self.current_process.kill()
-                                print("✅ 任务已强制终止")
+                                print("✅ Task force stopped")
                             except (ProcessLookupError, PermissionError):
                                 pass
-                    print("\n👋 再见！\n")
+                    print("\n👋 Goodbye!\n")
                     break
                 
                 if user_input == '/help':
-                    # 清屏并重新显示 banner
+                    # Clear screen and redisplay banner
                     os.system('clear' if os.name != 'nt' else 'cls')
                     print(self.get_banner_text())
                     continue
                 
                 if user_input == '/agents':
-                    print("\n📋 可用 Agents:")
+                    print("\n📋 Available Agents:")
                     for i, agent in enumerate(self.available_agents, 1):
-                        mark = " (当前)" if agent == self.current_agent else ""
+                        mark = " (current)" if agent == self.current_agent else ""
                         print(f"  {i}. {agent}{mark}")
                     print()
                     continue
                 
                 if user_input == '/resume':
-                    # 恢复中断的任务
+                    # Resume interrupted task
                     print(f"\n🔍 {self.t('checking_task')}")
                     interrupted = self._get_interrupted_task()
                     
@@ -902,7 +902,7 @@ class InteractiveCLI:
                         print(f"❌ {interrupted['message']}\n")
                         continue
                     
-                    # 显示任务信息
+                    # Display task information
                     print(f"\n{'='*80}")
                     print(f"📋 {self.t('task_found')}")
                     print(f"{'='*80}")
@@ -912,31 +912,31 @@ class InteractiveCLI:
                     print(f"📊 {self.t('stack_depth')}: {interrupted['stack_depth']}")
                     print(f"{'='*80}\n")
                     
-                    # 确认恢复
+                    # Confirm resume
                     confirm = input(f"{self.t('resume_confirm')} ").strip().lower()
                     if confirm not in ['y', 'yes']:
                         print(f"⏭️  {self.t('resume_cancelled')}\n")
                         continue
                     
-                    # 恢复任务
+                    # Resume task
                     print(f"\n▶️  {self.t('resuming_task')}\n")
                     self.run_task(interrupted['agent_name'], interrupted['user_input'])
                     continue
                 
                 if user_input == '/zh':
-                    # 切换到中文
+                    # Switch to Chinese
                     self.language = 'zh'
-                    print("\n✅ 已切换到中文\n")
+                    print("\n✅ Switched to Chinese\n")
                     continue
                 
                 if user_input == '/en':
-                    # 切换到英文
+                    # Switch to English
                     self.language = 'en'
                     print("\n✅ Switched to English\n")
                     continue
                 
-                # 在执行新任务前，检查是否有待处理的 HIL 或工具确认
-                # 防止用户不小心输入内容而不是按回车处理待处理任务
+                # Before executing new task, check for pending HIL or tool confirmation
+                # Prevent users from accidentally entering content instead of pressing Enter to handle pending tasks
                 if self.pending_hil or self.pending_tool_confirmation:
                     print("\n" + "="*80)
                     print(f"⚠️  {self.t('pending_task_warning')}")
@@ -950,24 +950,24 @@ class InteractiveCLI:
                     print("="*80 + "\n")
                     continue
                 
-                # 解析输入
+                # Parse input
                 agent_name, task = self.parse_input(user_input)
                 
                 if agent_name and task:
-                    # 在任务末尾添加时间戳
+                    # Add timestamp to task end
                     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    task_with_timestamp = f"{task} [时间: {timestamp}]"
+                    task_with_timestamp = f"{task} [Time: {timestamp}]"
                     
-                    # 执行任务
+                    # Execute task
                     self.run_task(agent_name, task_with_timestamp)
                 
             except KeyboardInterrupt:
-                # Ctrl+C: 终止当前任务但不退出 CLI
+                # Ctrl+C: Terminate current task but don't exit CLI
                 if self.current_process and self.current_process.poll() is None:
-                    print("\n\n⚠️  正在中断任务...")
+                    print("\n\n⚠️  Interrupting task...")
                     try:
                         if sys.platform == 'win32':
-                            # Windows: 发送 Ctrl+Break 信号
+                            # Windows: Send Ctrl+Break signal
                             self.current_process.send_signal(signal.CTRL_BREAK_EVENT)
                             try:
                                 self.current_process.wait(timeout=2)
@@ -978,7 +978,7 @@ class InteractiveCLI:
                                 except (subprocess.TimeoutExpired, ProcessLookupError):
                                     self.current_process.kill()
                         else:
-                            # Unix/Mac: 使用 terminate
+                            # Unix/Mac: Use terminate
                             self.current_process.terminate()
                             try:
                                 self.current_process.wait(timeout=2)
@@ -989,18 +989,18 @@ class InteractiveCLI:
                             self.current_process.kill()
                         except (ProcessLookupError, PermissionError):
                             pass
-                    print("✅ 任务已中断\n")
-                    print("💡 输入/resume回车可续跑，输入新内容开始新任务\n")
+                    print("✅ Task interrupted\n")
+                    print("💡 Enter /resume to resume, enter new content to start new task\n")
                 else:
-                    print("\n\n💡 没有运行中的任务。输入 /quit 退出 CLI\n")
+                    print("\n\n💡 No running task. Enter /quit to exit CLI\n")
                 continue
             except EOFError:
-                # Ctrl+D: 退出
-                # 停止 HIL 检查线程
+                # Ctrl+D: Exit
+                # Stop HIL checker thread
                 self.stop_hil_checker = True
                 
                 if self.current_process and self.current_process.poll() is None:
-                    print("\n\n⏹️  正在停止运行中的任务...")
+                    print("\n\n⏹️  Stopping running task...")
                     try:
                         if sys.platform == 'win32':
                             self.current_process.send_signal(signal.CTRL_BREAK_EVENT)
@@ -1017,21 +1017,21 @@ class InteractiveCLI:
                             self.current_process.kill()
                         except (ProcessLookupError, PermissionError):
                             pass
-                print("\n\n👋 再见！\n")
+                print("\n\n👋 Goodbye!\n")
                 break
 
 
 def get_available_agent_systems():
-    """获取可用的 Agent 系统列表"""
+    """Get available Agent system list"""
     try:
-        # 查找 config/agent_library/ 目录
+        # Find config/agent_library/ directory
         project_root = Path(__file__).parent.parent
         agent_library_dir = project_root / "config" / "agent_library"
         
         if not agent_library_dir.exists():
             return ["Test_agent"]
         
-        # 获取所有子目录作为可用系统
+        # Get all subdirectories as available systems
         systems = []
         for item in agent_library_dir.iterdir():
             if item.is_dir() and not item.name.startswith('.'):
@@ -1044,11 +1044,11 @@ def get_available_agent_systems():
 
 
 def start_cli_mode(agent_system: str = None, language: str = 'en'):
-    """启动交互式 CLI 模式"""
-    # task_id = 当前目录
+    """Start interactive CLI mode"""
+    # task_id = current directory
     task_id = os.path.abspath(os.getcwd())
     
-    # 如果没有指定 agent_system，让用户选择
+    # If agent_system not specified, let user choose
     if agent_system is None:
         available_systems = get_available_agent_systems()
         
@@ -1079,15 +1079,14 @@ def start_cli_mode(agent_system: str = None, language: str = 'en'):
                 print(f"❌ {t('invalid_choice', language)} 1-{len(available_systems)}\n")
         
         if language == 'zh':
-            print(f"✅ 已选择: {agent_system}\n")
+            print(f"✅ Selected: {agent_system}\n")
         else:
             print(f"✅ Selected: {agent_system}\n")
     
     cli = InteractiveCLI(task_id, agent_system)
-    cli.language = language  # 设置语言
+    cli.language = language  # Set language
     cli.run()
 
 
 if __name__ == "__main__":
     start_cli_mode()
-
